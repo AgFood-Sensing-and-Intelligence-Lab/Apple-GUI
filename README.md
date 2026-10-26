@@ -151,14 +151,6 @@ Default model file: `models/best.pt`. Size model: `models/size_model.pkl`.
 
 ---
 
-## Citation
-
-If you use this software, please cite ASABE Paper No. 2600080:
-
-Amjad, H., Lu, Y., & Tian, Y. (2026). Design and development of an open-source graphical user interface for real-time in-field multispectral apple grading and sorting. ASABE Paper No. 2600080. St. Joseph, MI: ASABE. https://doi.org/10.13031/aim.202600080
-
----
-
 ## License note
 
 This repository's application code is released for research use with the paper. Live JAI acquisition depends on the vendor eBUS Python SDK, which users obtain from the camera SDK package and install locally. That SDK is proprietary and is not published in this repository.
