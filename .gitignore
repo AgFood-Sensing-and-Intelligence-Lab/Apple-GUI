@@ -65,3 +65,8 @@ scripts/api_doc.txt
 # Presentation decks (keep local; not part of app source)
 *.pptx
 
+# Vendor eBUS SDK materials (proprietary; keep local, do not publish)
+ebus_python*.whl
+eBUS SDK*.pdf
+*eBUS*Quick Start*.pdf
+

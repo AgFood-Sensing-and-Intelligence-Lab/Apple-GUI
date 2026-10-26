@@ -63,7 +63,7 @@ This will:
 - Install the JAI/Pleora eBUS Python wheel if an `ebus_python*.whl` is found next to `install.bat` or under the Pleora SDK Python folder
 - Create an "Apple Sorter" shortcut on the Desktop
 
-Live camera mode needs the proprietary eBUS Python package. Without it, the app still runs in mock / video-simulation mode.
+Live camera mode uses the JAI/Pleora eBUS Python package. Obtain the `ebus_python` wheel from the vendor SDK install, place it next to `install.bat` (or keep it under the Pleora SDK Python folder), then run setup. Without eBUS, the app still runs in mock / video-simulation mode.
 
 **Step 2 - Launch**
 
@@ -82,7 +82,7 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 python main.py
 ```
 
-`environment.yml` does not install PyTorch; use the pip command above (same as `install.bat`). For live JAI capture, also install the matching `ebus_python` wheel from the Pleora/JAI SDK.
+`environment.yml` does not install PyTorch; use the pip command above (same as `install.bat`). For live JAI capture, install `ebus_python` from your Pleora/JAI SDK wheel (not shipped in this repository).
 
 ---
 
@@ -161,4 +161,4 @@ Amjad, H., Lu, Y., & Tian, Y. (2026). Design and development of an open-source g
 
 ## License note
 
-This repository's application code is released for research use with the paper. Live JAI acquisition depends on the vendor eBUS Python SDK, which is distributed under a proprietary end-user license and is not redistributed here.
+This repository's application code is released for research use with the paper. Live JAI acquisition depends on the vendor eBUS Python SDK, which users obtain from the camera SDK package and install locally. That SDK is proprietary and is not published in this repository.
