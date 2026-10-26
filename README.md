@@ -1,121 +1,136 @@
 # Apple Sorting GUI
 
-Real-time multispectral vision system for in-field apple grading and pneumatic sorting.
-Michigan State University
+Open-access operator GUI for real-time in-field multispectral apple grading and pneumatic sorting.
+Michigan State University | ASABE Paper No. 2600080
 
 [![Python](https://img.shields.io/badge/Python-3.10-blue)](https://python.org)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green)](https://pypi.org/project/PyQt6/)
-[![Status](https://img.shields.io/badge/Status-In%20Development-orange)]()
+[![ASABE](https://img.shields.io/badge/ASABE-AIM%202026-0B5FFF)](https://doi.org/10.13031/aim.202600080)
 
 ---
 
 ## What It Is
 
-A modular GUI application integrating a **JAI FSFE-3200T-10GE multispectral camera**, a **YOLOv8m-seg AI grading pipeline**, and a **pneumatic 3-lane sorting system** into one operator-facing interface for real-time in-field apple sorting.
+A modular, multi-threaded PyQt6 GUI for a multispectral vision-based apple grading and sorting system. It integrates a **JAI FSFE-3200T-10GE** camera, a **YOLO instance-segmentation** grading pipeline (default weights: YOLOv8m-seg), online size estimation, and **Arduino-based pneumatic sorting** on a three-lane screw conveyor.
+
+Paper: *Design and Development of An Open-Source Graphical User Interface for Real-Time In-Field Multispectral Apple Grading and Sorting* (Amjad, Lu, and Tian, 2026).
 
 ## System Overview
 
 ```
-[JAI Camera] -> [AI Grading (YOLOv8)] -> [SorterController] -> [Arduino] -> [Solenoid Valves] -> [Paddles]
-  3-channel       Fresh/Process/Cull     timed delay            serial      3 lanes x 2 sub      3 outlets
-  multispectral   per apple instance     camera->gate (ms)      USB/COM     modules (A and B)     A / B / C
+[JAI Camera] -> [YOLO + tracking/grading] -> [SorterController] -> [Arduino] -> [Pneumatic paddles]
+  Color+NIR1+NIR2   Fresh/Processing/Cull      XYZ digit packet      USB serial   Outlets A/B/C
+  eBUS MultiSource  multi-view vote + size     per committed apple   115200 baud
 ```
 
-**3 Grades, 3 Outlets:**
+**Three grades, three outlets** (matches Table 3a in the paper):
 
-| Grade | Outlet | Action |
-|---|---|---|
-| Fresh | A | Submodule A fires - paddle deflects apple |
-| Processing | B | Submodule B fires - paddle deflects apple |
-| Cull | C | No command - apple falls through (default/safe) |
+| Grade | Outlet | Action digit | Example (Lane 1) |
+|---|---|---|---|
+| Fresh | A | 1 | `100\n` |
+| Processing | B | 2 | `200\n` |
+| Cull | C | 3 | `300\n` |
+
+Serial packet format is three ASCII digits plus newline (`XYZ\n`): X = lane 1, Y = lane 2, Z = lane 3. Inactive lanes send `0`. Valid action digits are 1, 2, and 3 only. Arduino acknowledges actuation with `OK`.
 
 ---
 
-## Running on a New Machine
+## Repository
 
-**Requirements before you start:**
+```bash
+git clone https://github.com/AgFood-Sensing-and-Intelligence-Lab/Apple-GUI.git
+cd Apple-GUI
+```
+
+---
+
+## Running on a New Windows Machine
+
+**Requirements:**
 
 - [Miniconda or Anaconda](https://docs.conda.io/en/latest/miniconda.html)
-- NVIDIA driver version 525 or newer (for CUDA support)
+- NVIDIA driver 525 or newer (CUDA / GPU inference)
 - Windows 10 or 11 (64-bit)
 
-**Step 1 - Run the installer (once):**
+**Step 1 - Install once**
 
 Double-click `install.bat`.
 
 This will:
-- Create the `applegui` conda environment with all dependencies
-- Install PyTorch with CUDA 12.8 support
-- Install the JAI eBUS SDK from the included wheel file
-- Create an "Apple Sorter" shortcut on your Desktop
 
-**Step 2 - Launch the app:**
+- Create or update the `applegui` conda environment from `environment.yml`
+- Install PyTorch with CUDA 12.8 support
+- Install the JAI/Pleora eBUS Python wheel if an `ebus_python*.whl` is found next to `install.bat` or under the Pleora SDK Python folder
+- Create an "Apple Sorter" shortcut on the Desktop
+
+Live camera mode needs the proprietary eBUS Python package. Without it, the app still runs in mock / video-simulation mode.
+
+**Step 2 - Launch**
 
 Double-click `launch.bat` or the Desktop shortcut.
-
-The app starts in Mock Mode by default. No hardware is required to run it.
 
 ---
 
 ## Developer Setup
 
 ```bash
-git clone https://github.com/hsbamjad/applegui.git
-cd apple_gui
+git clone https://github.com/AgFood-Sensing-and-Intelligence-Lab/Apple-GUI.git
+cd Apple-GUI
 conda env create -f environment.yml
 conda activate applegui
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 python main.py
 ```
 
-Note: `environment.yml` does not include PyTorch. After creating the env, install it manually:
-
-```bash
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
-```
+`environment.yml` does not install PyTorch; use the pip command above (same as `install.bat`). For live JAI capture, also install the matching `ebus_python` wheel from the Pleora/JAI SDK.
 
 ---
 
 ## Features
 
-- Real-time 3-channel multispectral acquisition via JAI FSFE-3200T and Harvesters/GenTL
-- YOLOv8m-seg inference with segmentation, tracking, and multi-view grade voting
-- Timed pneumatic sorter control via Arduino and PySerial with camera-to-gate delay
-- Live dashboard showing grade distribution, throughput, conveyor speed, and system status
-- Apple size estimation using a ridge regression model trained on segmentation mask features
-- Asynchronous CSV and TIFF logging per apple instance
-- Mock mode for full pipeline simulation without any hardware
+- Synchronized three-channel acquisition (Color, NIR1, NIR2) via the JAI/Pleora eBUS Python SDK
+- GenICam camera controls from the GUI: ROI, frame rate, per-channel exposure/gain/black level, white balance
+- Runtime YOLO model load/unload and confidence threshold control
+- Instance segmentation, ByteTrack + conveyor-aware tracking, multi-view grade aggregation
+- Online fruit size estimation from segmentation masks (ridge regression model)
+- Pneumatic sorter control over USB serial (or simulation mode without hardware)
+- Live multispectral display, grading statistics, and analytics dashboard
+- On-demand session logging (CSV grades, per-apple crops, optional raw frames)
+- Mock / video-simulation modes for full pipeline testing without the camera
 
 ---
 
-## Hardware
+## Hardware (lab system)
 
 | Component | Specification |
 |---|---|
-| Camera | JAI FSFE-3200T-10GE (3-sensor, 5-band, 10 GigE) |
-| NIC | 10 Gigabit Ethernet (Intel X550-T2 or equivalent) |
-| GPU | NVIDIA RTX series (RTX 5060 Ti on Shuttle PC) |
-| RAM | 32 GB recommended |
-| Conveyor | 3-lane screw conveyor, 1-3 apples per second per lane |
-| Sorter | 3 pneumatic units (solenoid valve + air cylinder + paddle) |
-| Controller | Arduino per lane, USB/Serial to PC |
-| Air supply | Compressed air for pneumatic cylinders |
+| Camera | JAI FSFE-3200T-10GE (3-CMOS, 10 GigE Vision) |
+| Spectral channels | Color (visible); NIR1 (~800 nm band); NIR2 (~900 nm band) |
+| Resolution | 2048 x 1536 pixels per channel |
+| Acquisition | 30 FPS stable full-resolution free-run (default exposure 9229 us) |
+| Lens | 6 mm, f/2.8 (3CMOS/prism) |
+| NIC | 10 Gigabit Ethernet |
+| Computing | Intel Core i9-11900K, NVIDIA RTX 5060 Ti (16 GB), 128 GB RAM |
+| Conveyor | 3-lane screw conveyor, design throughput 1-3 apples/s/lane |
+| Sorter | 3 pneumatic units (solenoid + air cylinder + paddle) |
+| Controller | Arduino, USB serial at 115200 baud |
 | OS | Windows 10/11 |
 
-## Sorter Wiring
+Illumination in the imaging chamber: six downward-facing halogen lamps and four white LED strips (as described in the paper).
+
+## Sorter Wiring (logical)
 
 ```
-PC (COM3) --USB--> Arduino --> Solenoid Valve A --> Air Cylinder A --> Paddle A --> Outlet A (Fresh)
-                           --> Solenoid Valve B --> Air Cylinder B --> Paddle B --> Outlet B (Processing)
-                                                                       (default) --> Outlet C (Cull)
+PC (COM3) --USB--> Arduino --doAction(digit)--> solenoid pair --> paddle --> Outlet A/B/C
 ```
 
-Arduino command format: `<lane><submodule>\n` -- e.g. `1A\n` = Lane 1, Fresh.
+Physical arrival timing uses the sorter-gate NIR sensor on the Arduino. With `camera_to_gate_m: 0.0`, the GUI fires the serial command when the grade is committed; the Arduino queues the digit and actuates when the fruit reaches the gate.
 
 ---
 
 ## Configuration
 
-Edit `config/config.yaml` to switch between mock and real hardware:
+Edit `config/config.yaml`:
 
 ```yaml
 camera:
@@ -125,8 +140,25 @@ sorter:
   mode: "simulation"  # "simulation" | "serial"
   serial:
     port: "COM3"      # Arduino COM port
+    baudrate: 115200
 
 conveyor:
-  camera_to_gate_m: 0.5      # Physical distance from camera to sorter gate (meters)
-  speed_apples_per_sec: 1    # 1 | 2 | 3 apples per second per lane
+  camera_to_gate_m: 0.0          # 0.0 = fire on grade; Arduino NIR gate handles timing
+  speed_apples_per_sec: 1        # nominal 1 | 2 | 3 apples/s/lane
 ```
+
+Default model file: `models/best.pt`. Size model: `models/size_model.pkl`.
+
+---
+
+## Citation
+
+If you use this software, please cite ASABE Paper No. 2600080:
+
+Amjad, H., Lu, Y., & Tian, Y. (2026). Design and development of an open-source graphical user interface for real-time in-field multispectral apple grading and sorting. ASABE Paper No. 2600080. St. Joseph, MI: ASABE. https://doi.org/10.13031/aim.202600080
+
+---
+
+## License note
+
+This repository's application code is released for research use with the paper. Live JAI acquisition depends on the vendor eBUS Python SDK, which is distributed under a proprietary end-user license and is not redistributed here.
