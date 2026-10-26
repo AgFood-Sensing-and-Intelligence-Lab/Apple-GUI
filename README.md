@@ -1,7 +1,7 @@
 # Apple Sorting GUI
 
 Open-access operator GUI for real-time in-field multispectral apple grading and pneumatic sorting.
-Michigan State University | ASABE Paper No. 2600080
+Michigan State University
 
 [![Python](https://img.shields.io/badge/Python-3.10-blue)](https://python.org)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green)](https://pypi.org/project/PyQt6/)
