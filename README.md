@@ -13,8 +13,6 @@ Michigan State University | ASABE Paper No. 2600080
 
 A modular, multi-threaded PyQt6 GUI for a multispectral vision-based apple grading and sorting system. It integrates a **JAI FSFE-3200T-10GE** camera, a **YOLO instance-segmentation** grading pipeline, online size estimation, and **Arduino-based pneumatic sorting** on a three-lane screw conveyor.
 
-Paper: *Design and Development of An Open-Source Graphical User Interface for Real-Time In-Field Multispectral Apple Grading and Sorting* (Amjad, Lu, and Tian, 2026).
-
 ## System Overview
 
 ```
